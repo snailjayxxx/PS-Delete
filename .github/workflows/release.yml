@@ -5,10 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
   issues:
-    types: [opened]
+    types: [opened, reopened]
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: release-${{ github.ref }}
@@ -165,3 +166,23 @@ jobs:
             注意：macOS Core 尚未使用 Apple Developer ID 签名和公证；PS CCX 尚未经过 Adobe Marketplace 验证。
           files: release-dist/*
           fail_on_unmatched_files: true
+
+  notify:
+    if: always() && github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0'
+    needs: [validate, package_plugins, build_core, release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report release result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RELEASE_RESULT: ${{ needs.release.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          if [[ "$RELEASE_RESULT" == "success" ]]; then
+            BODY="✅ Joss AI Cleanup v0.1.0 已完成构建并发布。\n\n下载：https://github.com/${{ github.repository }}/releases/tag/v0.1.0\n构建记录：$RUN_URL"
+          else
+            BODY="❌ Joss AI Cleanup v0.1.0 构建或发布失败。\n\n请查看构建记录：$RUN_URL"
+          fi
+          gh issue comment "$ISSUE_NUMBER" --body "$BODY"
