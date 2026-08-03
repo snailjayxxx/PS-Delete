@@ -8,10 +8,13 @@ on:
     types: [opened, reopened]
   issue_comment:
     types: [created]
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
   issues: write
+  pull-requests: write
 
 concurrency:
   group: release-${{ github.ref }}
@@ -19,19 +22,25 @@ concurrency:
 
 jobs:
   acknowledge:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0')
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0') || (github.event_name == 'pull_request' && github.event.pull_request.title == '[release] v0.1.0' && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
     steps:
       - name: Acknowledge release request
-        if: github.event_name == 'issues' || github.event_name == 'issue_comment'
+        if: github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: gh issue comment "$ISSUE_NUMBER" --body "🚀 已启动 Joss AI Cleanup v0.1.0 构建。\n\n构建记录：$RUN_URL"
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            gh pr comment "$ISSUE_NUMBER" --body "🚀 已启动 Joss AI Cleanup v0.1.0 构建。\n\n构建记录：$RUN_URL"
+          else
+            gh issue comment "$ISSUE_NUMBER" --body "🚀 已启动 Joss AI Cleanup v0.1.0 构建。\n\n构建记录：$RUN_URL"
+          fi
 
   validate:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0')
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0') || (github.event_name == 'pull_request' && github.event.pull_request.title == '[release] v0.1.0' && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -147,7 +156,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0'))
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0') || (github.event_name == 'pull_request' && github.event.pull_request.title == '[release] v0.1.0' && github.event.pull_request.base.ref == 'main')
     needs: [package_plugins, build_core]
     runs-on: ubuntu-latest
     steps:
@@ -182,14 +191,14 @@ jobs:
           fail_on_unmatched_files: true
 
   notify:
-    if: always() && ((github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0'))
+    if: always() && ((github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0') || (github.event_name == 'pull_request' && github.event.pull_request.title == '[release] v0.1.0' && github.event.pull_request.base.ref == 'main'))
     needs: [validate, package_plugins, build_core, release]
     runs-on: ubuntu-latest
     steps:
       - name: Report release result
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
           RELEASE_RESULT: ${{ needs.release.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         shell: bash
@@ -199,4 +208,8 @@ jobs:
           else
             BODY="❌ Joss AI Cleanup v0.1.0 构建或发布失败。\n\n请查看构建记录：$RUN_URL"
           fi
-          gh issue comment "$ISSUE_NUMBER" --body "$BODY"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            gh pr comment "$ISSUE_NUMBER" --body "$BODY"
+          else
+            gh issue comment "$ISSUE_NUMBER" --body "$BODY"
+          fi
