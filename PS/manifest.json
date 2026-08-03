@@ -1,0 +1,43 @@
+{
+  "manifestVersion": 5,
+  "id": "com.snailjoss.psdelete",
+  "name": "Joss AI Cleanup",
+  "version": "0.1.0",
+  "main": "index.html",
+  "host": [
+    {
+      "app": "PS",
+      "minVersion": "25.0.0"
+    }
+  ],
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "jossAICleanupPanel",
+      "label": {
+        "default": "Joss AI Cleanup",
+        "zh_CN": "Joss AI 智能清理"
+      },
+      "minimumSize": {
+        "width": 300,
+        "height": 480
+      },
+      "preferredDockedSize": {
+        "width": 340,
+        "height": 620
+      },
+      "preferredFloatingSize": {
+        "width": 380,
+        "height": 680
+      }
+    }
+  ],
+  "requiredPermissions": {
+    "network": {
+      "domains": [
+        "http://127.0.0.1:18780",
+        "http://localhost:18780"
+      ]
+    }
+  }
+}

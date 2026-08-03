@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "joss-ai-cleanup-core"
+version = "0.1.0"
+description = "Local AI image-cleanup bridge for Photoshop and Lightroom Classic"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.116.1",
+  "uvicorn[standard]==0.35.0",
+  "pydantic==2.11.7",
+  "httpx==0.28.1",
+  "Pillow==11.3.0",
+  "python-multipart==0.0.20",
+  "keyring==25.6.0",
+  "platformdirs==4.3.8",
+]
+
+[project.scripts]
+joss-ai-cleanup-core = "joss_ai_cleanup.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["joss_ai_cleanup*"]

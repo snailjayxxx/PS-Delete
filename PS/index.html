@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Joss AI Cleanup</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Joss AI Cleanup</h1>
+        <p>Photoshop 选区式 AI 清理</p>
+      </div>
+      <span id="coreStatus" class="status offline">核心未连接</span>
+    </header>
+
+    <section class="card">
+      <label for="operation">处理类型</label>
+      <select id="operation">
+        <option value="remove_object">去除人物 / 杂物</option>
+        <option value="film_dust">胶片灰尘 / 毛发</option>
+        <option value="film_scratch">胶片划痕修复</option>
+        <option value="denoise">智能降噪</option>
+        <option value="authorized_overlay">授权文字 / 日期戳清理</option>
+        <option value="custom">自定义处理</option>
+      </select>
+
+      <label for="prompt">补充说明</label>
+      <textarea id="prompt" rows="4" placeholder="例如：去除选区中的行人，自然恢复道路和阴影。"></textarea>
+
+      <div class="grid two">
+        <div>
+          <label for="provider">AI 服务</label>
+          <select id="provider">
+            <option value="dashscope">阿里百炼 / 万相</option>
+            <option value="volcengine">火山方舟 / 豆包</option>
+            <option value="baidu">百度千帆</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="openai">OpenAI</option>
+            <option value="custom-openai">OpenAI 兼容接口</option>
+          </select>
+        </div>
+        <div>
+          <label for="quality">质量</label>
+          <select id="quality">
+            <option value="low">快速</option>
+            <option value="medium" selected>标准</option>
+            <option value="high">精细</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="context">选区上下文：<span id="contextValue">20%</span></label>
+      <input id="context" type="range" min="0" max="50" step="5" value="20" />
+
+      <label id="rightsRow" class="checkbox hidden">
+        <input id="rightsConfirmed" type="checkbox" />
+        <span>我拥有该图片或已获得移除覆盖物的授权</span>
+      </label>
+
+      <button id="runButton" class="primary">开始处理并创建新图层</button>
+      <button id="refreshButton" class="secondary">重新检测本地核心</button>
+      <p id="message" class="message"></p>
+    </section>
+
+    <details class="card">
+      <summary>API 设置</summary>
+      <p class="help">密钥保存在本机系统凭据库中，由 PS 与 LR 共用，不经过第三方服务器。</p>
+      <label for="apiKey">API Key</label>
+      <input id="apiKey" type="password" placeholder="留空表示不修改" />
+      <label for="model">模型 / Endpoint ID</label>
+      <input id="model" type="text" placeholder="留空使用推荐模型" />
+      <label for="baseUrl">自定义 Base URL</label>
+      <input id="baseUrl" type="text" placeholder="可选" />
+      <label for="workspaceId">阿里百炼 Workspace ID</label>
+      <input id="workspaceId" type="text" placeholder="仅百炼需要" />
+      <button id="saveProviderButton" class="secondary">保存当前服务设置</button>
+      <p id="providerStatus" class="help"></p>
+    </details>
+
+    <footer>
+      <span>v0.1.0</span>
+      <span>默认只修改 Photoshop 当前选区</span>
+    </footer>
+  </main>
+  <script src="main.js"></script>
+</body>
+</html>
