@@ -6,6 +6,8 @@ on:
   workflow_dispatch:
   issues:
     types: [opened, reopened]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write
@@ -16,8 +18,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  acknowledge:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acknowledge release request
+        if: github.event_name == 'issues' || github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: gh issue comment "$ISSUE_NUMBER" --body "🚀 已启动 Joss AI Cleanup v0.1.0 构建。\n\n构建记录：$RUN_URL"
+
   validate:
-    if: github.event_name != 'issues' || github.event.issue.title == '[release] v0.1.0'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -133,7 +147,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.ref == 'refs/heads/main' && (github.event_name != 'issues' || github.event.issue.title == '[release] v0.1.0')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0'))
     needs: [package_plugins, build_core]
     runs-on: ubuntu-latest
     steps:
@@ -168,7 +182,7 @@ jobs:
           fail_on_unmatched_files: true
 
   notify:
-    if: always() && github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0'
+    if: always() && ((github.event_name == 'issues' && github.event.issue.title == '[release] v0.1.0') || (github.event_name == 'issue_comment' && github.event.issue.title == '[release] v0.1.0' && github.event.comment.body == '/release v0.1.0'))
     needs: [validate, package_plugins, build_core, release]
     runs-on: ubuntu-latest
     steps:
