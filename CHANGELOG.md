@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 - 2026-08-04
+
+- 修复 Photoshop CCX 安装时报错代码 -4（Manifest Parse Failure）。
+- 将 UXP Manifest 的 `host` 从开发模式数组改为可分发 CCX 要求的单个对象。
+- 新增 Photoshop 源目录与打包后 CCX 的自动结构校验。
+- 打包时确保 `manifest.json` 位于 CCX 根目录，并移除跨平台 ZIP 扩展属性。
+- Release 增加 Developer Load ZIP，作为 Creative Cloud 安装器异常时的备用加载方式。
+- Release 工作流改为从 `VERSION` 动态读取版本并核对 Release PR 标题。
+
 ## 0.1.0 - 2026-08-04
 
 - 建立 Photoshop UXP 与 Lightroom Classic Lua 双插件结构。
