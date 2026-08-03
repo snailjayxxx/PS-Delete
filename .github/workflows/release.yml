@@ -34,9 +34,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            gh pr comment "$ISSUE_NUMBER" --body "🚀 已启动 Joss AI Cleanup v0.1.0 构建。\n\n构建记录：$RUN_URL"
+            gh pr comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "🚀 已启动 Joss AI Cleanup v0.1.0 构建。\n\n构建记录：$RUN_URL"
           else
-            gh issue comment "$ISSUE_NUMBER" --body "🚀 已启动 Joss AI Cleanup v0.1.0 构建。\n\n构建记录：$RUN_URL"
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "🚀 已启动 Joss AI Cleanup v0.1.0 构建。\n\n构建记录：$RUN_URL"
           fi
 
   validate:
@@ -209,7 +209,7 @@ jobs:
             BODY="❌ Joss AI Cleanup v0.1.0 构建或发布失败。\n\n请查看构建记录：$RUN_URL"
           fi
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            gh pr comment "$ISSUE_NUMBER" --body "$BODY"
+            gh pr comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$BODY"
           else
-            gh issue comment "$ISSUE_NUMBER" --body "$BODY"
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$BODY"
           fi
